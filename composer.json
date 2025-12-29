@@ -1,0 +1,65 @@
+{
+    "name": "baddybugs/agent",
+    "description": "Intelligent monitoring agent for Laravel, the data collector for BaddyBugs platform.",
+    "keywords": ["laravel", "monitoring", "observability", "agent", "performance", "apm"],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "BaddyBugs Team",
+            "email": "dev@baddybugs.test"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^10.0|^11.0|^12.0",
+        "illuminate/http": "^10.0|^11.0|^12.0",
+        "illuminate/database": "^10.0|^11.0|^12.0",
+        "illuminate/queue": "^10.0|^11.0|^12.0",
+        "illuminate/console": "^10.0|^11.0|^12.0",
+        "illuminate/contracts": "^10.0|^11.0|^12.0",
+        "illuminate/log": "^10.0|^11.0|^12.0",
+        "illuminate/mail": "^10.0|^11.0|^12.0",
+        "illuminate/notifications": "^10.0|^11.0|^12.0",
+        "illuminate/cache": "^10.0|^11.0|^12.0",
+        "guzzlehttp/guzzle": "^7.8"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.5",
+        "mockery/mockery": "^1.6"
+    },
+    "suggest": {
+        "ext-pcntl": "Required for precise CPU usage monitoring",
+        "ext-uopz": "Required for advanced function hooking/profiling"
+    },
+    "autoload": {
+        "psr-4": {
+            "BaddyBugs\\Agent\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BaddyBugs\\Agent\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BaddyBugs\\Agent\\BaddyBugsAgentServiceProvider"
+            ],
+            "aliases": {
+                "BaddyBugs": "BaddyBugs\\Agent\\Facades\\BaddyBugs"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
