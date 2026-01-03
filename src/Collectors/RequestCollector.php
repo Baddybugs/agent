@@ -73,6 +73,13 @@ class RequestCollector implements CollectorInterface
                 // Ignore user extraction errors
             }
 
+            // Add response size
+            $payload['response_size'] = strlen($response->getContent());
+            $payload['content_length'] = $response->headers->get('Content-Length', strlen($response->getContent()));
+            
+            // Add server info
+            $payload['server'] = $request->server('SERVER_SOFTWARE');
+
             BaddyBugs::record('request', $request->method() . ' ' . $request->path(), $payload);
         } catch (\Throwable $e) {
             // Fail silently to prevent agent from crashing the app

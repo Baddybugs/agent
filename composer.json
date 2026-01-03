@@ -7,7 +7,7 @@
     "authors": [
         {
             "name": "BaddyBugs Team",
-            "email": "dev@baddybugs.test"
+            "email": "dev@baddybugs.com"
         }
     ],
     "require": {
@@ -36,11 +36,6 @@
     "autoload": {
         "psr-4": {
             "BaddyBugs\\Agent\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "BaddyBugs\\Agent\\Tests\\": "tests/"
         }
     },
     "extra": {

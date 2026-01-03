@@ -177,6 +177,9 @@ class TimelineCollector implements CollectorInterface
                 'detail_level' => config('baddybugs.timeline_detail_level', 'detailed'),
             ]);
             
+            // **NEW: Send lifecycle phases as trace_spans for waterfall visualization**
+            $this->sendLifecycleSpans();
+            
             if (config('baddybugs.regression_capture_baselines', true)) {
                 $interval = (int) config('baddybugs.regression_baseline_snapshot_interval', 100);
                 $count = null;
@@ -209,6 +212,88 @@ class TimelineCollector implements CollectorInterface
                 }
             }
         });
+    }
+
+    /**
+     * Send lifecycle phases as trace_spans for waterfall visualization
+     */
+    protected function sendLifecycleSpans(): void
+    {
+        $spans = [];
+        $bootstrapEnd = null;
+        $middlewareStart = null;
+        $middlewareEnd = null;
+        $controllerName = null;
+        
+        // Extract lifecycle events from timeline
+        foreach ($this->timeline as $event) {
+            // Bootstrap phase (request started to route matched)
+            if ($event['type'] === 'request' && $event['name'] === 'started') {
+                $bootstrapEnd = $event['timestamp'];
+            }
+            
+            // Route matched = end of bootstrap, start of middleware
+            if ($event['type'] === 'routing' && $event['name'] === 'matched') {
+                $middlewareStart = $event['timestamp'];
+                $controllerName = $event['data']['controller'] ?? null;
+            }
+            
+            // Request completed = end of everything
+            if ($event['type'] === 'request' && $event['name'] === 'completed') {
+                $middlewareEnd = $event['timestamp'];
+            }
+        }
+        
+        // BOOTSTRAP span
+        if ($this->requestStartTime && $bootstrapEnd) {
+            $spans[] = [
+                'type' => 'bootstrap',
+                'name' => 'Application Bootstrap',
+                'start_time' => $this->requestStartTime,
+                'end_time' => $bootstrapEnd,
+                'duration_ms' => round(($bootstrapEnd - $this->requestStartTime) * 1000, 2),
+            ];
+        }
+        
+        // MIDDLEWARE span
+        if ($middlewareStart && $middlewareEnd) {
+            $spans[] = [
+                'type' => 'middleware',
+                'name' => 'Middleware Stack',
+                'start_time' => $middlewareStart,
+                'end_time' => $middlewareEnd,
+                'duration_ms' => round(($middlewareEnd - $middlewareStart) * 1000, 2),
+            ];
+        }
+        
+        // CONTROLLER span
+        if ($controllerName && $middlewareEnd) {
+            $controllerStart = $middlewareEnd;
+            $controllerEnd = microtime(true);
+            $spans[] = [
+                'type' => 'controller',
+                'name' => "Controller: {$controllerName}",
+                'start_time' => $controllerStart,
+                'end_time' => $controllerEnd,
+                'duration_ms' => round(($controllerEnd - $controllerStart) * 1000, 2),
+            ];
+        }
+        
+        // SENDING span
+        $sendingStart = microtime(true) - 0.001;
+        $sendingEnd = microtime(true);
+        $spans[] = [
+            'type' => 'sending',
+            'name' => 'Sending Response',
+            'start_time' => $sendingStart,
+            'end_time' => $sendingEnd,
+            'duration_ms' => round(($sendingEnd - $sendingStart) * 1000, 2),
+        ];
+        
+        // Record each span
+        foreach ($spans as $span) {
+            $this->baddybugs->record('trace_span', $span['type'], $span);
+        }
     }
 
     /**
